@@ -1,6 +1,6 @@
-# aplicacion_maps
+# Restaurant Finder
 
-A new Flutter project.
+Proyecto para la materia Desarrollo Móvil Integral
 
 ## Getting Started
 
