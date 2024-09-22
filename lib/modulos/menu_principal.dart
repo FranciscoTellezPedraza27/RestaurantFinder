@@ -21,6 +21,9 @@ class _MapScreenState extends State<MapScreen> {
   Set<Marker> _markers = Set<Marker>();
   TextEditingController _searchController = TextEditingController();
 
+  // Variable para almacenar la información del lugar seleccionado
+  Map<String, dynamic>? _selectedPlace;
+
   @override
   void initState() {
     super.initState();
@@ -65,7 +68,7 @@ class _MapScreenState extends State<MapScreen> {
       _mapController!.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(position.latitude, position.longitude),
-          zoom: 14,
+          zoom: 15,
         ),
       ));
     }
@@ -80,15 +83,14 @@ class _MapScreenState extends State<MapScreen> {
         CameraPosition(
           target:
               LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          zoom: 14,
+          zoom: 15,
         ),
       ));
     }
   }
 
   Future<void> _fetchNearbyRestaurants(double lat, double lng) async {
-    final String apiKey =
-        'AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'; // Reemplaza con tu propia API Key
+    final String apiKey = 'AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'; // Reemplaza con tu propia API Key
     final String url =
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&radius=1500&type=restaurant&key=$apiKey';
 
@@ -104,6 +106,12 @@ class _MapScreenState extends State<MapScreen> {
             markerId: MarkerId(place['place_id']),
             position: LatLng(place['geometry']['location']['lat'],
                 place['geometry']['location']['lng']),
+            onTap: () {
+              setState(() {
+                // Almacenar la información del lugar seleccionado
+                _selectedPlace = place;
+              });
+            },
             infoWindow: InfoWindow(
               title: place['name'],
               snippet: place['vicinity'],
@@ -115,26 +123,6 @@ class _MapScreenState extends State<MapScreen> {
     } else {
       throw Exception('Error al cargar lugares');
     }
-  }
-
-  Future<bool> _onWillPop() async {
-    return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('¿Deseas cerrar la aplicación?'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Sí'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   Future<void> _searchPlaces(String query) async {
@@ -178,7 +166,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: () => _onWillPop(context),
       child: Scaffold(
         body: IndexedStack(
           index: currentIndex,
@@ -188,21 +176,82 @@ class _MapScreenState extends State<MapScreen> {
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
-                    target:
-                        LatLng(37.7749, -122.4194), // Ubicación predeterminada
+                    target: LatLng(37.7749, -122.4194), // Ubicación predeterminada
                     zoom: 14,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   markers: _markers,
                 ),
+                if (_selectedPlace != null) // Mostrar la tarjeta si hay un lugar seleccionado
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Image.network(
+                            _selectedPlace!['photos'] != null
+                                ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${_selectedPlace!['photos'][0]['photo_reference']}&key=AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'
+                                : 'https://via.placeholder.com/400', // Placeholder si no hay foto
+                            height: 100,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            _selectedPlace!['name'],
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            _selectedPlace!['vicinity'],
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: List.generate(5, (index) {
+                              double rating = _selectedPlace!['rating'] != null
+                                  ? _selectedPlace!['rating']
+                                  : 0;
+                              return Icon(
+                                Icons.star,
+                                color: index < rating ? Colors.amber : Colors.grey,
+                                size: 20,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 Positioned(
                   top: 16,
-                  left: 16, // Ajusta la posición horizontal
+                  left: 16, 
                   child: IconButton(
-                    icon: Icon(Icons.logout),
+                    icon: Icon(Icons.logout_sharp),
                     onPressed: _logout,
-                    color: Colors.white, // Cambia el color si es necesario
+                    color: Colors.black,
                   ),
                 ),
                 Positioned(
@@ -211,7 +260,6 @@ class _MapScreenState extends State<MapScreen> {
                   right: 65,
                   child: Container(
                     alignment: Alignment.center,
-                    width: 150,
                     margin: EdgeInsets.only(bottom: 16.0),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.8),
@@ -225,18 +273,19 @@ class _MapScreenState extends State<MapScreen> {
                         ),
                       ],
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Buscar lugares de comida',
-                        fillColor: Colors.transparent,
-                        filled: true,
-                        border: InputBorder.none,
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.search),
-                          onPressed: () {
-                            _searchPlaces(_searchController.text);
-                          },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Buscar lugar...',
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.search),
+                            onPressed: () {
+                              _searchPlaces(_searchController.text);
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -244,20 +293,17 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ],
             ),
-            ReservasScreen(), // Asegúrate de que esta clase esté correctamente definida
+            ReservasScreen(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: currentIndex,
-          onTap: (value) {
+          onTap: (index) {
             setState(() {
-              currentIndex = value;
+              currentIndex = index;
             });
           },
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.black,
-          unselectedItemColor: Colors.black,
-          items: [
+           items: [
             BottomNavigationBarItem(
                 icon: Icon(Icons.place, color: Color.fromARGB(255, 32, 32, 32)),
                 label: "Mapa"),
@@ -269,5 +315,13 @@ class _MapScreenState extends State<MapScreen> {
         ),
       ),
     );
+  }
+
+  Future<bool> _onWillPop(BuildContext context) async {
+    if (Navigator.of(context).canPop()) {
+      return Future.value(true);
+    } else {
+      return Future.value(false);
+    }
   }
 }
