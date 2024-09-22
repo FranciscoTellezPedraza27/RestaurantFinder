@@ -1,0 +1,4 @@
+#Wed Sep 11 22:29:37 CST 2024
+base.0=C\:\\Users\\franc\\Documents\\U T V M\\9 Cuatri\\Desarrollo de dispositivos inteligentes\\AppsFlutter9C\\appCompleta\\app_maps\\aplicacion_maps\\android\\app\\build\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
