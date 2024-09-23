@@ -182,6 +182,12 @@ class _MapScreenState extends State<MapScreen> {
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   markers: _markers,
+                  onTap: (LatLng position){
+                    setState(() {
+                      //Al hacer clic en cualquier lugar, se cierra la tarjeta de la información
+                      _selectedPlace = null;
+                    });
+                  },
                 ),
                 if (_selectedPlace != null) // Mostrar la tarjeta si hay un lugar seleccionado
                   Positioned(
