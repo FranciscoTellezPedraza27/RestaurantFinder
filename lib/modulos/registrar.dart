@@ -319,15 +319,26 @@ class _registrarState extends State<Registrar> {
                         ),
                         onPressed: () {
                           if (_key.currentState!.validate()) {
-                            Operaciones.insertarAppbd(Nota(
-                              nombre: nombreControlador.text,
-                              apellido: apellidoControlador.text,
-                              correo: correoControlador.text,
-                              contrasena: contrasenaControlador.text,
-                              confContrasena: confContrasenacontrolador.text,
-                            ));
-
-                            _mostrarNotificacionYRedirigir();
+                            //Validar las contraseñas
+                            if (contrasenaControlador.text == confContrasenacontrolador.text) {
+                              //Si las contraseñas coinciden, se registra el usuario
+                              Operaciones.insertarAppbd(Nota(
+                                nombre: nombreControlador.text,
+                                apellido: apellidoControlador.text,
+                                correo: correoControlador.text,
+                                contrasena: contrasenaControlador.text,
+                                confContrasena: confContrasenacontrolador.text,
+                              ));
+                              _mostrarNotificacionYRedirigir();
+                            } else {
+                              //Si las contraseñas no coinciden, le aparezca un error
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Las contraseñas no coinciden'),
+                                  backgroundColor: Colors.red,
+                                  ),
+                              );
+                            }
                           }
                         },
                         child: Text('Registrarse', style: TextStyle(color: Colors.black)),

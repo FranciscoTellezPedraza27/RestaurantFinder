@@ -1,3 +1,4 @@
+import 'package:aplicacion_maps/modulos/informacion_lugar.dart';
 import 'package:aplicacion_maps/modulos/login.dart';
 import 'package:aplicacion_maps/modulos/reservas.dart';
 import 'package:flutter/material.dart';
@@ -194,7 +195,15 @@ class _MapScreenState extends State<MapScreen> {
                     bottom: 16,
                     left: 16,
                     right: 16,
-                    child: Container(
+                    child: GestureDetector(
+                      onTap: (){
+                        //Navega a la pantalla de información
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context)=> InformacionLugar()),
+                        );
+                      },
+                      child: Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -250,6 +259,7 @@ class _MapScreenState extends State<MapScreen> {
                         ],
                       ),
                     ),
+                  ),
                   ),
                 Positioned(
                   top: 16,
