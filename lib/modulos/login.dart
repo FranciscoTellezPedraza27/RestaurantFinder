@@ -29,6 +29,9 @@ class _loginState extends State<login> {
         ),
       );
     } else {
+      //Limpia los campos después del intento fallido
+      correoController.clear();
+      contrasenaController.clear();
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
