@@ -197,10 +197,13 @@ class _MapScreenState extends State<MapScreen> {
                     right: 16,
                     child: GestureDetector(
                       onTap: (){
+                        //Obtener el ID de lugar seleccionado
+                        String selectedPlaceId = _selectedPlace!['place_id'];
+
                         //Navega a la pantalla de información
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context)=> InformacionLugar()),
+                          MaterialPageRoute(builder: (context)=> InformacionLugar(placeId: selectedPlaceId)),
                         );
                       },
                       child: Container(
