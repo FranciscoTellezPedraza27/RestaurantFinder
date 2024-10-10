@@ -91,7 +91,8 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _fetchNearbyRestaurants(double lat, double lng) async {
-    final String apiKey = 'AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'; // Reemplaza con tu propia API Key
+    final String apiKey =
+        'AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'; // Reemplaza con tu propia API Key
     final String url =
         'https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=$lat,$lng&radius=1500&type=restaurant&key=$apiKey';
 
@@ -177,96 +178,103 @@ class _MapScreenState extends State<MapScreen> {
                 GoogleMap(
                   onMapCreated: _onMapCreated,
                   initialCameraPosition: CameraPosition(
-                    target: LatLng(37.7749, -122.4194), // Ubicación predeterminada
+                    target:
+                        LatLng(37.7749, -122.4194), // Ubicación predeterminada
                     zoom: 14,
                   ),
                   myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   markers: _markers,
-                  onTap: (LatLng position){
+                  onTap: (LatLng position) {
                     setState(() {
                       //Al hacer clic en cualquier lugar, se cierra la tarjeta de la información
                       _selectedPlace = null;
                     });
                   },
                 ),
-                if (_selectedPlace != null) // Mostrar la tarjeta si hay un lugar seleccionado
+                if (_selectedPlace !=
+                    null) // Mostrar la tarjeta si hay un lugar seleccionado
                   Positioned(
                     bottom: 16,
                     left: 16,
                     right: 16,
                     child: GestureDetector(
-                      onTap: (){
+                      onTap: () {
                         //Obtener el ID de lugar seleccionado
                         String selectedPlaceId = _selectedPlace!['place_id'];
 
                         //Navega a la pantalla de información
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context)=> InformacionLugar(placeId: selectedPlaceId)),
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  InformacionLugar(placeId: selectedPlaceId)),
                         );
                       },
                       child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Image.network(
-                            _selectedPlace!['photos'] != null
-                                ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${_selectedPlace!['photos'][0]['photo_reference']}&key=AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'
-                                : 'https://via.placeholder.com/400', // Placeholder si no hay foto
-                            height: 100,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _selectedPlace!['name'],
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              spreadRadius: 2,
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _selectedPlace!['vicinity'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                          ],
+                        ),
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.network(
+                              _selectedPlace!['photos'] != null
+                                  ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${_selectedPlace!['photos'][0]['photo_reference']}&key=AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'
+                                  : 'https://via.placeholder.com/400', // Placeholder si no hay foto
+                              height: 100,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
                             ),
-                          ),
-                          SizedBox(height: 8),
-                          Row(
-                            children: List.generate(5, (index) {
-                              double rating = _selectedPlace!['rating'] != null
-                                  ? _selectedPlace!['rating']
-                                  : 0;
-                              return Icon(
-                                Icons.star,
-                                color: index < rating ? Colors.amber : Colors.grey,
-                                size: 20,
-                              );
-                            }),
-                          ),
-                        ],
+                            SizedBox(height: 8),
+                            Text(
+                              _selectedPlace!['name'],
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              _selectedPlace!['vicinity'],
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Row(
+                              children: List.generate(5, (index) {
+                                double rating =
+                                    _selectedPlace!['rating'] != null
+                                        ? _selectedPlace!['rating']
+                                        : 0;
+                                return Icon(
+                                  Icons.star,
+                                  color: index < rating
+                                      ? Colors.amber
+                                      : Colors.grey,
+                                  size: 20,
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  ),
                 Positioned(
                   top: 16,
-                  left: 16, 
+                  left: 16,
                   child: IconButton(
                     icon: Icon(Icons.logout_sharp),
                     onPressed: _logout,
@@ -322,7 +330,7 @@ class _MapScreenState extends State<MapScreen> {
               currentIndex = index;
             });
           },
-           items: [
+          items: [
             BottomNavigationBarItem(
                 icon: Icon(Icons.place, color: Color.fromARGB(255, 32, 32, 32)),
                 label: "Mapa"),

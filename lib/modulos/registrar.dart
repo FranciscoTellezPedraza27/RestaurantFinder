@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:aplicacion_maps/BD/operaciones.dart';
 import 'package:aplicacion_maps/BD/nota.dart';
 import 'package:aplicacion_maps/modulos/login.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+
+//Funciíon para encriptar la contraseña usando SHA256
+String encriptarContrasena(String contrasena) {
+  final bytes = utf8.encode(contrasena); //Codifica la contraseña a bytes
+  final digest = sha256.convert(bytes); //Encripta la contraseña
+  return digest.toString(); //Devuelve la contraseña encriptada
+}
 
 class Registrar extends StatefulWidget {
   const Registrar({super.key});
@@ -12,13 +21,28 @@ class Registrar extends StatefulWidget {
 
 class _registrarState extends State<Registrar> {
   bool _mostrarContrasena = false;
-  bool _mostrarConfContrasena = false; // Nueva variable para confirmar contraseña
+  bool _mostrarConfContrasena =
+      false; // Nueva variable para confirmar contraseña
   final _key = GlobalKey<FormState>();
   final nombreControlador = TextEditingController();
   final apellidoControlador = TextEditingController();
   final correoControlador = TextEditingController();
   final contrasenaControlador = TextEditingController();
   final confContrasenacontrolador = TextEditingController();
+
+  //Función para validar correos electrónicos
+  String? validarEmail(String? value) {
+    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$';
+    RegExp regExp = RegExp(pattern);
+
+    if (value == null || value.isEmpty) {
+      return 'Por favor, ingrese un correo';
+    } else if (!regExp.hasMatch(value)) {
+      return 'Correo inválido';
+    } else {
+      return null;
+    }
+  }
 
   void _mostrarNotificacionYRedirigir() {
     showDialog(
@@ -54,7 +78,8 @@ class _registrarState extends State<Registrar> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/restaurante.jpg'), // Cambia a tu imagen de fondo
+                image: AssetImage(
+                    'assets/restaurante.jpg'), // Cambia a tu imagen de fondo
                 fit: BoxFit.cover,
               ),
             ),
@@ -92,30 +117,33 @@ class _registrarState extends State<Registrar> {
                             return null;
                           },
                           decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0x29141218).withOpacity(0.2),
-                          labelText: 'Nombre(s)',
-                          labelStyle: TextStyle(color: Colors.black),
-                          prefixIcon: Icon(Icons.person, color: Colors.black,),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color:
-                                    Colors.grey), // Color del borde por defecto
+                            filled: true,
+                            fillColor: Color(0x29141218).withOpacity(0.2),
+                            labelText: 'Nombre(s)',
+                            labelStyle: TextStyle(color: Colors.black),
+                            prefixIcon: Icon(
+                              Icons.person,
+                              color: Colors.black,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .grey), // Color del borde por defecto
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está habilitado
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está enfocado
+                            ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está habilitado
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está enfocado
-                          ),
-                        ),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -133,30 +161,33 @@ class _registrarState extends State<Registrar> {
                             return null;
                           },
                           decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0x29141218).withOpacity(0.2),
-                          labelText: 'Apellido(s)',
-                          labelStyle: TextStyle(color: Colors.black),
-                          prefixIcon: Icon(Icons.person_outline_outlined, color: Colors.black,),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color:
-                                    Colors.grey), // Color del borde por defecto
+                            filled: true,
+                            fillColor: Color(0x29141218).withOpacity(0.2),
+                            labelText: 'Apellido(s)',
+                            labelStyle: TextStyle(color: Colors.black),
+                            prefixIcon: Icon(
+                              Icons.person_outline_outlined,
+                              color: Colors.black,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .grey), // Color del borde por defecto
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está habilitado
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está enfocado
+                            ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está habilitado
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está enfocado
-                          ),
-                        ),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -167,37 +198,35 @@ class _registrarState extends State<Registrar> {
                         ),
                         child: TextFormField(
                           controller: correoControlador,
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return "No se aceptan campos vacíos";
-                            }
-                            return null;
-                          },
+                          validator: validarEmail,
                           decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0x29141218).withOpacity(0.2),
-                          labelText: 'Correo',
-                          labelStyle: TextStyle(color: Colors.black),
-                          prefixIcon: Icon(Icons.email, color: Colors.black,),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color:
-                                    Colors.grey), // Color del borde por defecto
+                            filled: true,
+                            fillColor: Color(0x29141218).withOpacity(0.2),
+                            labelText: 'Correo',
+                            labelStyle: TextStyle(color: Colors.black),
+                            prefixIcon: Icon(
+                              Icons.email,
+                              color: Colors.black,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .grey), // Color del borde por defecto
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está habilitado
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está enfocado
+                            ),
                           ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está habilitado
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está enfocado
-                          ),
-                        ),
                         ),
                       ),
                       SizedBox(height: 10),
@@ -220,7 +249,10 @@ class _registrarState extends State<Registrar> {
                             fillColor: Color(0x29141218).withOpacity(0.2),
                             labelStyle: TextStyle(color: Colors.black),
                             labelText: "Contraseña",
-                            prefixIcon: Icon(Icons.lock, color: Colors.black,),
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: Colors.black,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _mostrarContrasena
@@ -234,23 +266,23 @@ class _registrarState extends State<Registrar> {
                               },
                             ),
                             border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color:
-                                    Colors.grey), // Color del borde por defecto
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está habilitado
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está enfocado
-                          ),
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .grey), // Color del borde por defecto
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está habilitado
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está enfocado
+                            ),
                           ),
                         ),
                       ),
@@ -274,7 +306,10 @@ class _registrarState extends State<Registrar> {
                             fillColor: Color(0x29141218).withOpacity(0.2),
                             labelText: "Confirmar contraseña",
                             labelStyle: TextStyle(color: Colors.black),
-                            prefixIcon: Icon(Icons.lock_outline, color: Colors.black,),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: Colors.black,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _mostrarConfContrasena
@@ -283,28 +318,29 @@ class _registrarState extends State<Registrar> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _mostrarConfContrasena = !_mostrarConfContrasena;
+                                  _mostrarConfContrasena =
+                                      !_mostrarConfContrasena;
                                 });
                               },
                             ),
                             border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color:
-                                    Colors.grey), // Color del borde por defecto
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está habilitado
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(15),
-                            borderSide: BorderSide(
-                                color: Colors
-                                    .white), // Color del borde cuando el campo está enfocado
-                          ),
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .grey), // Color del borde por defecto
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está habilitado
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Colors
+                                      .white), // Color del borde cuando el campo está enfocado
+                            ),
                           ),
                         ),
                       ),
@@ -315,12 +351,25 @@ class _registrarState extends State<Registrar> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          padding: EdgeInsets.symmetric(vertical: 15, horizontal: 80),
+                          padding: EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 80),
                         ),
                         onPressed: () {
                           if (_key.currentState!.validate()) {
                             //Validar las contraseñas
-                            if (contrasenaControlador.text == confContrasenacontrolador.text) {
+                            if (contrasenaControlador.text ==
+                                confContrasenacontrolador.text) {
+                              //Encriptar la contraseña
+                              String contrasenaEncriptada = encriptarContrasena(
+                                  contrasenaControlador.text);
+                              // Imprimir los datos en la consola antes de insertar en la base de datos
+                              print('Datos del usuario:');
+                              print('Nombre: ${nombreControlador.text}');
+                              print('Apellido: ${apellidoControlador.text}');
+                              print('Correo: ${correoControlador.text}');
+                              print(
+                                  'Contraseña encriptada: $contrasenaEncriptada');
+
                               //Si las contraseñas coinciden, se registra el usuario
                               Operaciones.insertarAppbd(Nota(
                                 nombre: nombreControlador.text,
@@ -336,12 +385,13 @@ class _registrarState extends State<Registrar> {
                                 SnackBar(
                                   content: Text('Las contraseñas no coinciden'),
                                   backgroundColor: Colors.red,
-                                  ),
+                                ),
                               );
                             }
                           }
                         },
-                        child: Text('Registrarse', style: TextStyle(color: Colors.black)),
+                        child: Text('Registrarse',
+                            style: TextStyle(color: Colors.black)),
                       ),
                     ],
                   ),
