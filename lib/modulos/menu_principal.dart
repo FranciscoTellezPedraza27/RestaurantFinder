@@ -158,7 +158,10 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _logout() {
+  void _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); //Limpia todas las preferencias guardadas
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => login()),

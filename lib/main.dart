@@ -2,21 +2,24 @@ import 'dart:math';
 import 'package:aplicacion_maps/modulos/login.dart';
 import 'package:aplicacion_maps/modulos/menu_principal.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Importa SharedPreferences
+import 'package:shared_preferences/shared_preferences.dart'; // Importa SharedPreferences para la gestión de estados
 
 void main() {
-  runApp(myapp());
+  runApp(myapp()); // Inicia la aplicación
 }
 
+// Clase principal de la aplicación
 class myapp extends StatelessWidget {
   const myapp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Construye la aplicación MaterialApp con la pantalla principal
     return MaterialApp(home: PrinPage());
   }
 }
 
+// Pantalla principal de la aplicación
 class PrinPage extends StatefulWidget {
   const PrinPage({super.key});
 
@@ -28,13 +31,15 @@ class _PrinPageState extends State<PrinPage> {
   @override
   void initState() {
     super.initState();
-    _checkAppState(); // Verifica el estado de la app
+    _checkAppState(); // Verifica el estado de la app al iniciar
   }
 
   // Función para verificar el estado de la app
   void _checkAppState() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool? isMapScreen = prefs.getBool('isMapScreen') ?? false;
+    SharedPreferences prefs =
+        await SharedPreferences.getInstance(); // Accede a SharedPreferences
+    bool? isMapScreen = prefs.getBool('isMapScreen') ??
+        false; // Obtiene el estado de la pantalla del mapa
 
     // Después de 5 segundos, decide si ir a login o a MapScreen
     Future.delayed(Duration(milliseconds: 5000), () {
@@ -60,6 +65,7 @@ class _PrinPageState extends State<PrinPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Construye la interfaz de la pantalla principal
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -74,11 +80,11 @@ class _PrinPageState extends State<PrinPage> {
         ),
         child: Center(
           child: Container(
-            width: 500, // Ajusta el ancho si es necesario
-            height: 350, // Ajusta la altura si es necesario
+            width: 500,
+            height: 350,
             child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceEvenly, // Distribuye los elementos uniformemente
+              mainAxisAlignment: MainAxisAlignment
+                  .spaceEvenly, // Distribuye los elementos uniformemente
               children: [
                 // Imagen arriba
                 Image.asset(
@@ -94,7 +100,8 @@ class _PrinPageState extends State<PrinPage> {
                 // Barra de progreso debajo del texto
                 CircularProgressIndicator(
                   backgroundColor: Color.fromARGB(255, 182, 234, 213),
-                  valueColor: AlwaysStoppedAnimation(Color.fromARGB(255, 202, 1, 1)),
+                  valueColor:
+                      AlwaysStoppedAnimation(Color.fromARGB(255, 202, 1, 1)),
                   strokeWidth: 5,
                 ),
               ],

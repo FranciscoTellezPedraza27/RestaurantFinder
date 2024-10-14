@@ -20,19 +20,19 @@ class Registrar extends StatefulWidget {
 }
 
 class _registrarState extends State<Registrar> {
-  bool _mostrarContrasena = false;
+  bool _mostrarContrasena = false; //Variable para mostrar/ocultar la contraseña
   bool _mostrarConfContrasena =
       false; // Nueva variable para confirmar contraseña
-  final _key = GlobalKey<FormState>();
-  final nombreControlador = TextEditingController();
-  final apellidoControlador = TextEditingController();
-  final correoControlador = TextEditingController();
-  final contrasenaControlador = TextEditingController();
-  final confContrasenacontrolador = TextEditingController();
+  final _key = GlobalKey<FormState>(); //Clave global para el formulario
+  final nombreControlador = TextEditingController(); //Controlador para el nombre
+  final apellidoControlador = TextEditingController(); //Controlador para el apellido
+  final correoControlador = TextEditingController(); //Controlador para el correo
+  final contrasenaControlador = TextEditingController(); //Controlador para la contraseña
+  final confContrasenacontrolador = TextEditingController(); //Controlador para confirmar la contraseña
 
   //Función para validar correos electrónicos
   String? validarEmail(String? value) {
-    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$';
+    String pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$'; //Expresión regular para validar correos
     RegExp regExp = RegExp(pattern);
 
     if (value == null || value.isEmpty) {
@@ -42,6 +42,19 @@ class _registrarState extends State<Registrar> {
     } else {
       return null;
     }
+  }
+
+  //Función para validar los nombres y los apellidos
+  String? validarNombreApellido(String? value) {
+    String pattern = r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s']+$"; // Permitir solo letras, espacios y apóstrofe
+    RegExp regExp = RegExp(pattern);
+
+    if (value == null || value.isEmpty) {
+      return 'Por favor, ingrese un nombre';
+    } else if (!regExp.hasMatch(value)) {
+      return 'Solo se permiten letras';
+    }
+      return null;
   }
 
   void _mostrarNotificacionYRedirigir() {
@@ -110,12 +123,7 @@ class _registrarState extends State<Registrar> {
                         ),
                         child: TextFormField(
                           controller: nombreControlador,
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return "No se aceptan campos vacíos";
-                            }
-                            return null;
-                          },
+                          validator: validarNombreApellido,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Color(0x29141218).withOpacity(0.2),
@@ -154,12 +162,7 @@ class _registrarState extends State<Registrar> {
                         ),
                         child: TextFormField(
                           controller: apellidoControlador,
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return "No se aceptan campos vacíos";
-                            }
-                            return null;
-                          },
+                          validator: validarNombreApellido,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Color(0x29141218).withOpacity(0.2),
