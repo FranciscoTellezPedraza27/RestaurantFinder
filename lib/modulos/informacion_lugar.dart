@@ -1,6 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
+import 'package:aplicacion_maps/modulos/reservar.dart';
+import 'package:aplicacion_maps/modulos/reservas.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+
 
 class InformacionLugar extends StatefulWidget {
   final String placeId;
@@ -15,6 +24,9 @@ class _InformacionLugarState extends State<InformacionLugar>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Map<String, dynamic>? placeDetails;
+  String? imageUrl;
+  List<String> reviewList = [];
+  final TextEditingController _reviewController = TextEditingController();
   String selectedDay = '';
   String? currentOpeningHours;
   bool showAllHours = false; // Controla si se muestran todos los horarios
@@ -33,7 +45,19 @@ class _InformacionLugarState extends State<InformacionLugar>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     fetchPlaceDetails();
+    loadReviews();
   }
+
+  Future<void> loadReviews() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      reviewList = prefs.getStringList('reviewList') ?? [];
+    });
+  }
+
+  //Guardar la imagen del lugar
+  String? mainImageURL; //Variable para almacenar la URL de la imagen principal
+
 
   Future<void> fetchPlaceDetails() async {
     final apiKey =
@@ -46,10 +70,30 @@ class _InformacionLugarState extends State<InformacionLugar>
     if (response.statusCode == 200) {
       setState(() {
         placeDetails = json.decode(response.body)['result'];
+
+        //Obtiene la URL de la imagen principal
+        if (placeDetails!['photos'] != null && placeDetails!['photos'].isNotEmpty){
+          final photoReference = placeDetails!['photos'][0]['photo_reference'];
+          mainImageURL = 
+            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=$photoReference&key=$apiKey';
+        }
       });
     } else {
       print('Failed to load place details');
     }
+  }
+
+  // Modificar el método _addReview para recibir la calificación como parámetro
+  void _addReview(String review, double rating) async {
+    setState(() {
+      reviewList.add(json.encode({'text': review, 'rating': rating}));
+      _reviewController.clear(); //Limpia el campo de texto
+      _reviewController.clear();
+    });
+
+    //Guarda las lista de reseñas
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setStringList('reviewList', reviewList);
   }
 
   @override
@@ -79,10 +123,57 @@ class _InformacionLugarState extends State<InformacionLugar>
             ),
           ),
           _buildReservarSection(),
+          _buildReviewInput(), //Agrega el formulario de reseñas
         ],
       ),
     );
   }
+
+  final TextEditingController _ratingController = TextEditingController();//Controlador para las reseñas
+
+  Widget _buildReviewInput() {
+    double rating = 0.0;
+
+  return Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: Column(
+      children: [
+        TextField(
+          controller: _reviewController,
+          decoration: InputDecoration(
+            hintText: 'Escribe una reseña',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        SizedBox(height: 8),
+        RatingBar.builder(
+          initialRating: rating,
+          minRating: 1,
+          direction: Axis.horizontal,
+          allowHalfRating: true,
+          itemCount: 5,
+          itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+          itemBuilder: (context, _) => Icon(
+            Icons.star,
+            color: Colors.amber,
+          ),
+          onRatingUpdate: (newRating) {
+            rating = newRating; // Guarda la calificación seleccionada
+          },
+        ),
+        SizedBox(height: 8),
+        ElevatedButton(
+          onPressed: () {
+            if (_reviewController.text.isNotEmpty) {
+              _addReview(_reviewController.text, rating); // Envía la reseña con la calificación
+            }
+          },
+          child: Text('Enviar'),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildHeader() {
     return Column(
@@ -279,80 +370,99 @@ class _InformacionLugarState extends State<InformacionLugar>
     );
   }
 
-  Widget _buildResenas() {
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // Número de columnas
-        childAspectRatio: 1.5, // Relación de aspecto para las tarjetas
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      padding: EdgeInsets.all(8.0),
-      itemCount: placeDetails!['reviews']?.length ?? 0,
-      itemBuilder: (context, index) {
-        final review = placeDetails!['reviews'][index];
-        final profilePhotoUrl =
-            review['profile_photo_url'] ?? ''; // URL de la foto del perfil
+  bool isValidJson(String source) {
+    try {
+      json.decode(source);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
-        return Card(
-          elevation: 4, // Sombra de la tarjeta
-          child: Padding(
-            padding: EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              // Permite el desplazamiento
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundImage: profilePhotoUrl.isNotEmpty
-                            ? NetworkImage(profilePhotoUrl)
-                            : null, // Cargar la imagen del perfil
-                        radius: 20, // Tamaño del avatar
-                        child: profilePhotoUrl
-                                .isEmpty // Texto en caso de no tener imagen
-                            ? Text(
-                                'U',
-                                style: TextStyle(color: Colors.white),
-                              )
-                            : null,
+// Modificar el método _addReview para recibir la calificación como parámetro
+  Widget _buildResenas() {
+  // Combina las reseñas existentes de placeDetails con las nuevas de reviewList
+  final combinedReviews = List<Map<String, dynamic>>.from(placeDetails!['reviews'] ?? [])
+    ..addAll(reviewList.where(isValidJson).map((jsonString) => json.decode(jsonString)));
+
+  return GridView.builder(
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: 2,
+      childAspectRatio: 1.5,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+    ),
+    padding: EdgeInsets.all(8.0),
+    itemCount: combinedReviews.length,
+    itemBuilder: (context, index) {
+      final review = combinedReviews[index];
+      final profilePhotoUrl = review['profile_photo_url'] ?? '';
+
+      return Card(
+        elevation: 4,
+        child: Padding(
+          padding: EdgeInsets.all(8.0),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundImage: profilePhotoUrl.isNotEmpty
+                          ? NetworkImage(profilePhotoUrl)
+                          : null,
+                      radius: 20,
+                      child: profilePhotoUrl.isEmpty
+                          ? Text('U', style: TextStyle(color: Colors.white))
+                          : null,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        review['author_name'] ?? 'Autor desconocido',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          review['author_name'] ?? 'Autor desconocido',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(review['text'] ?? 'Sin reseña'),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.star, color: Colors.yellow),
-                      Text('${review['rating'] ?? 'Sin calificación'}'),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(review['text'] ?? 'Sin reseña'),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.yellow),
+                    Text('${review['rating'] ?? 'Sin calificación'}'),
+                  ],
+                ),
+              ],
             ),
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 
   Widget _buildReservarSection() {
     return Container(
       padding: EdgeInsets.all(16),
       child: ElevatedButton(
         onPressed: () {
-          // Implementa la lógica para hacer una reserva
+          //Aqui se navega para reservar un lugar
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Reservar(
+                imageUrl: mainImageURL, //Imagen del lugar
+                direccion: placeDetails!['formatted_address'] ?? 'Dirección no disponible', 
+                calificacion: placeDetails!['rating']?.toDouble() ?? 0.0, //Calificación del lugar
+              ),
+            ),
+          );
         },
-        child: Text('Reservar'),
+        child: Text('Reservar una mesa'),
       ),
     );
   }
