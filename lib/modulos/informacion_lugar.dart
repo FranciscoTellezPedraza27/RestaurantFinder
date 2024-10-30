@@ -44,14 +44,26 @@ class _InformacionLugarState extends State<InformacionLugar>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      setState(() {});
+    });
     fetchPlaceDetails();
     loadReviews();
+
+    //Escucha los cambios de pestaña activa para mostrar los campos necesarios
+    _tabController.addListener(() {
+      if (_tabController.index == 2) {
+        // Muestra el formulario de reseñas al cambiar a la pestaña de reseñas
+        setState(() {});
+      }
+    }); 
   }
 
   Future<void> loadReviews() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      reviewList = prefs.getStringList('reviewList') ?? [];
+      //Usar el PlaceID como clave para almacenar las reseñas
+      reviewList = prefs.getStringList('reviewList_${widget.placeId}') ?? [];
     });
   }
 
@@ -88,12 +100,11 @@ class _InformacionLugarState extends State<InformacionLugar>
     setState(() {
       reviewList.add(json.encode({'text': review, 'rating': rating}));
       _reviewController.clear(); //Limpia el campo de texto
-      _reviewController.clear();
     });
 
     //Guarda las lista de reseñas
     final prefs = await SharedPreferences.getInstance();
-    prefs.setStringList('reviewList', reviewList);
+    prefs.setStringList('reviewList_${widget.placeId}', reviewList);
   }
 
   @override
@@ -123,7 +134,9 @@ class _InformacionLugarState extends State<InformacionLugar>
             ),
           ),
           _buildReservarSection(),
-          _buildReviewInput(), //Agrega el formulario de reseñas
+
+          // Muestra el formulario de reseñas en la pestaña de reseñas
+          if (_tabController.index == 2) _buildReviewInput(),
         ],
       ),
     );
@@ -135,42 +148,54 @@ class _InformacionLugarState extends State<InformacionLugar>
     double rating = 0.0;
 
   return Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-      children: [
-        TextField(
-          controller: _reviewController,
-          decoration: InputDecoration(
-            hintText: 'Escribe una reseña',
-            border: OutlineInputBorder(),
-          ),
+    padding: const EdgeInsets.all(8.0),
+    child: Container(
+      padding: const EdgeInsets.all(8.0), // Añade un relleno interno
+      child: Container(
+        padding: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8.0),
+          color: Colors.grey.shade100,
         ),
-        SizedBox(height: 8),
-        RatingBar.builder(
-          initialRating: rating,
-          minRating: 1,
-          direction: Axis.horizontal,
-          allowHalfRating: true,
-          itemCount: 5,
-          itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
-          itemBuilder: (context, _) => Icon(
-            Icons.star,
-            color: Colors.amber,
-          ),
-          onRatingUpdate: (newRating) {
-            rating = newRating; // Guarda la calificación seleccionada
-          },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _reviewController,
+              decoration: InputDecoration(
+                hintText: 'Escribe una reseña',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 8),
+            RatingBar.builder(
+              initialRating: rating,
+              minRating: 1,
+              direction: Axis.horizontal,
+              allowHalfRating: true,
+              itemCount: 5,
+              itemPadding: EdgeInsets.symmetric(horizontal: 2.0),
+              itemBuilder: (context, _) => Icon(
+                Icons.star,
+                color: Colors.amber,
+              ),
+              onRatingUpdate: (newRating) {
+                rating = newRating;
+              },
+            ),
+            SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () {
+                if (_reviewController.text.isNotEmpty) {
+                  _addReview(_reviewController.text, rating);
+                }
+              },
+              child: Text("Enviar reseña"),
+            ),
+          ],
         ),
-        SizedBox(height: 8),
-        ElevatedButton(
-          onPressed: () {
-            if (_reviewController.text.isNotEmpty) {
-              _addReview(_reviewController.text, rating); // Envía la reseña con la calificación
-            }
-          },
-          child: Text('Enviar'),
-        ),
-      ],
+      ),
     ),
   );
 }
@@ -444,8 +469,17 @@ class _InformacionLugarState extends State<InformacionLugar>
   );
 }
 
+@override
+void dispose() {
+  _tabController.dispose();
+  super.dispose();
+  }
 
   Widget _buildReservarSection() {
+    //Verifica si la pestaña activa es la de reseñas
+    if (_tabController.index == 2) {
+      return SizedBox.shrink();
+    }
     return Container(
       padding: EdgeInsets.all(16),
       child: ElevatedButton(
@@ -465,11 +499,5 @@ class _InformacionLugarState extends State<InformacionLugar>
         child: Text('Reservar una mesa'),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 }
