@@ -22,6 +22,13 @@ class _MapScreenState extends State<MapScreen> {
   Set<Marker> _markers = Set<Marker>();
   TextEditingController _searchController = TextEditingController();
 
+  final GlobalKey<ReservasScreenState> _reservasKey = GlobalKey();
+
+  //final ReservasScreen reservasScreen = ReservasScreen();
+  
+  // Agregamos una lista de reservas
+  List<Map<String, dynamic>> _reservas = [];
+
   // Variable para almacenar la información del lugar seleccionado
   Map<String, dynamic>? _selectedPlace;
 
@@ -110,7 +117,6 @@ class _MapScreenState extends State<MapScreen> {
                 place['geometry']['location']['lng']),
             onTap: () {
               setState(() {
-                // Almacenar la información del lugar seleccionado
                 _selectedPlace = place;
               });
             },
@@ -168,6 +174,12 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  void _reloadReservasIfNeed() {
+    if (currentIndex == 1) {
+      _reservasKey.currentState?.cargarReservasExternamente();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -190,23 +202,18 @@ class _MapScreenState extends State<MapScreen> {
                   markers: _markers,
                   onTap: (LatLng position) {
                     setState(() {
-                      //Al hacer clic en cualquier lugar, se cierra la tarjeta de la información
                       _selectedPlace = null;
                     });
                   },
                 ),
-                if (_selectedPlace !=
-                    null) // Mostrar la tarjeta si hay un lugar seleccionado
+                if (_selectedPlace != null)
                   Positioned(
                     bottom: 16,
                     left: 16,
                     right: 16,
                     child: GestureDetector(
                       onTap: () {
-                        //Obtener el ID de lugar seleccionado
                         String selectedPlaceId = _selectedPlace!['place_id'];
-
-                        //Navega a la pantalla de información
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -233,7 +240,7 @@ class _MapScreenState extends State<MapScreen> {
                             Image.network(
                               _selectedPlace!['photos'] != null
                                   ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${_selectedPlace!['photos'][0]['photo_reference']}&key=AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'
-                                  : 'https://via.placeholder.com/400', // Placeholder si no hay foto
+                                  : 'https://via.placeholder.com/400',
                               height: 100,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -323,7 +330,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ],
             ),
-            ReservasScreen(),
+            ReservasScreen(key: _reservasKey,),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -331,6 +338,7 @@ class _MapScreenState extends State<MapScreen> {
           onTap: (index) {
             setState(() {
               currentIndex = index;
+              _reloadReservasIfNeed(); //Verifica si es necesario recargar las reservas
             });
           },
           items: [

@@ -1,8 +1,10 @@
 import 'dart:math';
+import 'package:aplicacion_maps/database_helper.dart';
 import 'package:aplicacion_maps/modulos/login.dart';
 import 'package:aplicacion_maps/modulos/menu_principal.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Importa SharedPreferences para la gestión de estados
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart'; // Importa SharedPreferences para la gestión de estados
 
 void main() {
   runApp(myapp()); // Inicia la aplicación
@@ -33,6 +35,7 @@ class _PrinPageState extends State<PrinPage> {
     super.initState();
     _checkAppState(); // Verifica el estado de la app al iniciar
   }
+
 
   // Función para verificar el estado de la app
   void _checkAppState() async {
