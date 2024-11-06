@@ -25,7 +25,7 @@ class _MapScreenState extends State<MapScreen> {
   final GlobalKey<ReservasScreenState> _reservasKey = GlobalKey();
 
   //final ReservasScreen reservasScreen = ReservasScreen();
-  
+
   // Agregamos una lista de reservas
   List<Map<String, dynamic>> _reservas = [];
 
@@ -97,7 +97,7 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _fetchNearbyRestaurants(double lat, double lng) async {
+  void _fetchNearbyRestaurants(double lat, double lng) async {
     final String apiKey =
         'AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'; // Reemplaza con tu propia API Key
     final String url =
@@ -111,6 +111,9 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         _markers.clear();
         for (var place in data['results']) {
+          //Se asegura que "Ubicación" almacene tanto "vicinity" como "formated_address"
+          place['ubicacion'] = place['vicinity'] ?? place['formateted_address'];
+
           final marker = Marker(
             markerId: MarkerId(place['place_id']),
             position: LatLng(place['geometry']['location']['lat'],
@@ -122,7 +125,7 @@ class _MapScreenState extends State<MapScreen> {
             },
             infoWindow: InfoWindow(
               title: place['name'],
-              snippet: place['vicinity'],
+              snippet: place['ubicacion'],
             ),
           );
           _markers.add(marker);
@@ -151,6 +154,11 @@ class _MapScreenState extends State<MapScreen> {
             markerId: MarkerId(place['place_id']),
             position: LatLng(place['geometry']['location']['lat'],
                 place['geometry']['location']['lng']),
+            onTap: () {
+              setState(() {
+                _selectedPlace = place;
+              });
+            },
             infoWindow: InfoWindow(
               title: place['name'],
               snippet: place['formatted_address'],
@@ -213,13 +221,15 @@ class _MapScreenState extends State<MapScreen> {
                     right: 16,
                     child: GestureDetector(
                       onTap: () {
-                        String selectedPlaceId = _selectedPlace!['place_id'];
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  InformacionLugar(placeId: selectedPlaceId)),
-                        );
+                        String? selectedPlaceId = _selectedPlace!['place_id'];
+                        if (selectedPlaceId != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    InformacionLugar(placeId: selectedPlaceId)),
+                          );
+                        }
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -238,7 +248,11 @@ class _MapScreenState extends State<MapScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Image.network(
-                              _selectedPlace!['photos'] != null
+                              _selectedPlace!['photos'] != null &&
+                                      _selectedPlace!['photos'].isNotEmpty &&
+                                      _selectedPlace!['photos'][0]
+                                              ['photo_reference'] !=
+                                          null
                                   ? 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${_selectedPlace!['photos'][0]['photo_reference']}&key=AIzaSyCgat8vWDnwurpGuIoo5n5eO68pIZ-1kWI'
                                   : 'https://via.placeholder.com/400',
                               height: 100,
@@ -247,7 +261,7 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              _selectedPlace!['name'],
+                              _selectedPlace!['name'] ?? 'Nombre no disponible',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -255,7 +269,8 @@ class _MapScreenState extends State<MapScreen> {
                             ),
                             SizedBox(height: 8),
                             Text(
-                              _selectedPlace!['vicinity'],
+                              _selectedPlace!['ubicacion'] ??
+                                  'Ubicación no disponible',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -266,8 +281,8 @@ class _MapScreenState extends State<MapScreen> {
                               children: List.generate(5, (index) {
                                 double rating =
                                     _selectedPlace!['rating'] != null
-                                        ? _selectedPlace!['rating']
-                                        : 0;
+                                        ? _selectedPlace!['rating'].toDouble()
+                                        : 0.0;
                                 return Icon(
                                   Icons.star,
                                   color: index < rating
@@ -330,7 +345,9 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ],
             ),
-            ReservasScreen(key: _reservasKey,),
+            ReservasScreen(
+              key: _reservasKey,
+            ),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
