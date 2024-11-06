@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'package:aplicacion_maps/BD/operaciones.dart';
 import 'package:aplicacion_maps/modulos/reservas.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -86,12 +87,25 @@ class _ReservarState extends State<Reservar> {
   // Método para continuar a la pantalla de detalles
   void _continuar() async {
     if (_mesaSeleccionada != null) {
+      String fechaSeleccionada = DateFormat('dd MMMM yyyy').format(_selectedDate);
+
+      //Verificar si la mesa esta disponible
+      bool disponible = await Operaciones.esMesaDisponible(_mesaSeleccionada! + 1, fechaSeleccionada);
+
+      if (!disponible) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('La mesa seleccionada no está disponible en esta fecha')),
+        );
+        return; 
+      }
+
+      //Crear la nueva reserva
       Reserva nuevaReserva = Reserva(
         mesa: _mesaSeleccionada! + 1,
-        fecha: DateFormat('dd MMMM yyyy').format(_selectedDate),
+        fecha: fechaSeleccionada,
         adultos: _adultos,
         ninos: _ninos,
-        adolescentes: _adolescentes,
+        adolescentes: _adolescentes
       );
 
       // Guarda en la base de datos

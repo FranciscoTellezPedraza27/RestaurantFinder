@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:aplicacion_maps/modelo_reservas.dart'; // Importa tu modelo Reserva
+import 'BD/operaciones.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -22,8 +23,9 @@ class DatabaseHelper {
       path,
       version: 1,
       onCreate: (db, version) {
+        print('Creando tabla reservas');
         return db.execute(
-          'CREATE TABLE reservas(id INTEGER PRIMARY KEY, mesa INTEGER, fecha TEXT, adultos INTEGER, ninos INTEGER, adolescentes INTEGER)',
+          'CREATE TABLE IF NOT EXISTS reservas(id INTEGER PRIMARY KEY, mesa INTEGER, fecha TEXT, adultos INTEGER, ninos INTEGER, adolescentes INTEGER)',
         );
       },
     );
@@ -50,4 +52,11 @@ class DatabaseHelper {
       whereArgs: [id]
     );
   }
+
+  Future<List<int>> obtenerMesasOcupadas() async {
+  final db = await database;
+  final List<Map<String, dynamic>> reservas = await db.query('reservas');
+  return reservas.map((reserva) => reserva['mesa'] as int).toList();
+}
+
 }

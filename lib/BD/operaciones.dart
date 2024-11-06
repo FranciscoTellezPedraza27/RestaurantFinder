@@ -1,10 +1,27 @@
 import 'dart:ffi';
-
+import 'package:aplicacion_maps/database_helper.dart';
 import 'package:aplicacion_maps/BD/nota.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class Operaciones {
+
+  static Future<bool> esMesaDisponible(int mesa, String fecha) async {
+    final db = await DatabaseHelper().database;
+
+    final List<Map<String, dynamic>> reservas = await db.query(
+      'reservas',
+      where: 'mesa = ? AND fecha = ?',
+      whereArgs: [mesa, fecha],
+    );
+
+    return reservas.isEmpty;
+  }
+
+  static Future<void> eliminarReserva(int id) async {
+    final db = await DatabaseHelper().database;
+    await db.delete('reservas', where: 'id = ?', whereArgs: [id]);
+  }
 
   // Crear la Base de Datos y la Tabla
   static Future<Database> _abrirBD() async {
