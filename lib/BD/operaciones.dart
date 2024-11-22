@@ -3,16 +3,17 @@ import 'package:aplicacion_maps/database_helper.dart';
 import 'package:aplicacion_maps/BD/nota.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:aplicacion_maps/modelo_reservas.dart';
 
 class Operaciones {
 
-  static Future<bool> esMesaDisponible(int mesa, String fecha) async {
+  static Future<bool> esMesaDisponible(int mesa, String fecha, String placeId) async {
     final db = await DatabaseHelper().database;
 
     final List<Map<String, dynamic>> reservas = await db.query(
       'reservas',
-      where: 'mesa = ? AND fecha = ?',
-      whereArgs: [mesa, fecha],
+      where: 'mesa = ? AND fecha = ? AND placeId = ?',
+      whereArgs: [mesa, fecha, placeId],
     );
 
     return reservas.isEmpty;

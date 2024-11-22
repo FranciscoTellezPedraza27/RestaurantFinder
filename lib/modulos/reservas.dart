@@ -1,13 +1,14 @@
+// reservas.dart
 import 'package:flutter/material.dart';
 import 'package:aplicacion_maps/database_helper.dart';
 import 'package:aplicacion_maps/modelo_reservas.dart';
-import 'package:aplicacion_maps/database_helper.dart';
 import 'package:aplicacion_maps/modulos/reservar.dart';
 
 class ReservasScreen extends StatefulWidget {
   final VoidCallback? onReservasLoaded; // Callback para cuando se carguen las reservas
+  final String? placeId; // Nuevo campo para el lugar
 
-  const ReservasScreen({super.key, this.onReservasLoaded});
+  const ReservasScreen({super.key, this.onReservasLoaded, this.placeId});
 
   @override
   ReservasScreenState createState() => ReservasScreenState();
@@ -22,46 +23,91 @@ class ReservasScreenState extends State<ReservasScreen> {
     super.initState();
     _cargarReservas();
     _cargarMesasOcupadas();
+    DatabaseHelper().verificarTabla(); // Agrega esta línea
   }
 
+  
+
   Future<void> _cargarMesasOcupadas() async {
-    final mesasOcupadas = await DatabaseHelper().obtenerMesasOcupadas();
+    final mesasOcupadas = await DatabaseHelper().obtenerMesasOcupadas(widget.placeId ?? '');
     setState(() {
-      for (int mesa in mesasOcupadas){
-        _mesasOcupadas[mesa - 1] = true;
+      for (int mesa in mesasOcupadas) {
+        if (mesa <= _mesasOcupadas.length) {
+          _mesasOcupadas[mesa - 1] = true;
+        }
       }
     });
   }
 
   // Método para cargar las reservas desde la base de datos
   Future<void> _cargarReservas() async {
-    final data = await DatabaseHelper().obtenerReservas();
+  if (widget.placeId!= null) {
+    final data = await DatabaseHelper().obtenerReservasPorPlaceId(widget.placeId!);
     setState(() {
       reservas = data;
     });
-
-    // Notifica al widget padre que las reservas han sido cargadas
-    if (widget.onReservasLoaded != null) {
-      widget.onReservasLoaded!();
-    }
+  } else {
+    final data = await DatabaseHelper().obtenerTodasLasReservas(); // Llama a la función para obtener todas las reservas
+    setState(() {
+      reservas = data.isEmpty? [] : data;
+    });
   }
+
+  // Notifica al widget padre que las reservas han sido cargadas
+  if (widget.onReservasLoaded!= null) {
+    widget.onReservasLoaded!();
+  }
+}
 
   // Llama a esta función desde MapScreen para cargar las reservas
   void cargarReservasExternamente() {
+  if (widget.placeId!= null) {
     _cargarReservas();
+  } else {
+    _cargarReservas(); // Llama a _cargarReservas() incluso si placeId es null
+  }
+}
+
+  Future<void> _confirmarEliminarReservas(int id, int mesa) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Elminar reserva'),
+          content: Text('¿Estas seguro de eliminar esta reservación?'),
+          actions: [
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Si'),
+              onPressed: (){
+                _eliminarReserva(id, mesa);
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      },
+    );
   }
 
-  Future<void> _eliminarReservas(int id, int mesa) async {
+  Future<void> _eliminarReserva(int id, int mesa) async {
     await DatabaseHelper().eliminarReserva(id);
 
     setState(() {
       //Refresca la lista local y libera la mesa seleccionada
       _cargarReservas();
-      _mesasOcupadas[mesa - 1] = false;
+      if (mesa <= _mesasOcupadas.length) {
+        _mesasOcupadas[mesa - 1] = false;
+      }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Reserva eliminada')),
+      SnackBar(content: Text('Reserva eliminada'))
     );
   }
 
@@ -89,7 +135,7 @@ class ReservasScreenState extends State<ReservasScreen> {
                       'Adultos: ${reserva.adultos}, Niños: ${reserva.ninos}, Adolescentes: ${reserva.adolescentes}'),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _eliminarReservas(reserva.id!, reserva.mesa),
+                    onPressed: () => _confirmarEliminarReservas(reserva.id!, reserva.mesa),
                   ),
                 );
               },

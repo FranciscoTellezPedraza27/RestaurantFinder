@@ -16,6 +16,8 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
+  String? _selectedPlaceId; // Variable para guardar el placeId seleccionado
+
   int currentIndex = 0;
   GoogleMapController? _mapController;
   Position? _currentPosition;
@@ -121,6 +123,8 @@ class _MapScreenState extends State<MapScreen> {
             onTap: () {
               setState(() {
                 _selectedPlace = place;
+                _selectedPlaceId =
+                    _selectedPlace?['place_id']; // Agrega esta línea
               });
             },
             infoWindow: InfoWindow(
@@ -347,6 +351,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
             ReservasScreen(
               key: _reservasKey,
+              placeId: null, // Pasa un valor nulo si no se ha seleccionado un lugar
             ),
           ],
         ),

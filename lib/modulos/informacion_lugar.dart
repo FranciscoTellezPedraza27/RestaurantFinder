@@ -476,28 +476,29 @@ void dispose() {
   }
 
   Widget _buildReservarSection() {
-    //Verifica si la pestaña activa es la de reseñas
-    if (_tabController.index == 2) {
-      return SizedBox.shrink();
-    }
-    return Container(
-      padding: EdgeInsets.all(16),
-      child: ElevatedButton(
-        onPressed: () {
-          //Aqui se navega para reservar un lugar
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Reservar(
-                imageUrl: mainImageURL, //Imagen del lugar
-                direccion: placeDetails!['formatted_address'] ?? 'Dirección no disponible', 
-                calificacion: placeDetails!['rating']?.toDouble() ?? 0.0, //Calificación del lugar
-              ),
-            ),
-          );
-        },
-        child: Text('Reservar una mesa'),
-      ),
-    );
+  // Verifica si la pestaña activa es la de reseñas
+  if (_tabController.index == 2) {
+    return SizedBox.shrink();
   }
+  return Container(
+    padding: EdgeInsets.all(16),
+    child: ElevatedButton(
+      onPressed: () {
+        // Aquí se navega para reservar un lugar
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Reservar(
+              imageUrl: mainImageURL, // Imagen del lugar
+              direccion: placeDetails!['formatted_address'] ?? 'Dirección no disponible', 
+              calificacion: placeDetails!['rating']?.toDouble() ?? 0.0, // Calificación del lugar
+              placeId: widget.placeId, // Pasa el placeId
+            ),
+          ),
+        );
+      },
+      child: Text('Reservar una mesa'),
+    ),
+  );
+}
 }

@@ -10,8 +10,9 @@ class Reservar extends StatefulWidget {
   final String? imageUrl; // Recibe la URL de la imagen
   final String? direccion; // Recibe la dirección del restaurante
   final double? calificacion; // Recibe la calificación del restaurante
+  final String? placeId;
 
-  Reservar({this.imageUrl, this.direccion, this.calificacion}); // Constructor para aceptar la imagen
+  Reservar({this.imageUrl, this.direccion, this.calificacion, this.placeId}); // Constructor para aceptar la imagen
 
   @override
   _ReservarState createState() => _ReservarState();
@@ -86,49 +87,49 @@ class _ReservarState extends State<Reservar> {
 
   // Método para continuar a la pantalla de detalles
   void _continuar() async {
-    if (_mesaSeleccionada != null) {
-      String fechaSeleccionada = DateFormat('dd MMMM yyyy').format(_selectedDate);
+  if (_mesaSeleccionada != null) {
+    String fechaSeleccionada = DateFormat('dd MMMM yyyy').format(_selectedDate);
 
-      //Verificar si la mesa esta disponible
-      bool disponible = await Operaciones.esMesaDisponible(_mesaSeleccionada! + 1, fechaSeleccionada);
+    // Verificar si la mesa está disponible
+    bool disponible = await Operaciones.esMesaDisponible(_mesaSeleccionada! + 1, fechaSeleccionada, widget.placeId!);
 
-      if (!disponible) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('La mesa seleccionada no está disponible en esta fecha')),
-        );
-        return; 
-      }
-
-      //Crear la nueva reserva
-      Reserva nuevaReserva = Reserva(
-        mesa: _mesaSeleccionada! + 1,
-        fecha: fechaSeleccionada,
-        adultos: _adultos,
-        ninos: _ninos,
-        adolescentes: _adolescentes
-      );
-
-      // Guarda en la base de datos
-      await DatabaseHelper().insertarReserva(nuevaReserva);
-
-      // Actualiza la lista local para mostrar en la UI
-      setState(() {
-        _reservas.add(nuevaReserva.toMap());
-        _mesasOcupadas[_mesaSeleccionada!] = true;
-      });
-
-      // Navega a la pantalla de reservas
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => ReservasScreen()),
-      );
-    } else {
+    if (!disponible) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, selecciona una mesa antes de continuar')),
+        SnackBar(content: Text('La mesa seleccionada no está disponible en esta fecha para este lugar')),
       );
+      return;
     }
-  }
 
+    // Crear la nueva reserva
+    Reserva nuevaReserva = Reserva(
+      mesa: _mesaSeleccionada! + 1,
+      fecha: fechaSeleccionada,
+      adultos: _adultos,
+      ninos: _ninos,
+      adolescentes: _adolescentes,
+      placeId: widget.placeId!, // Agregar el placeId
+    );
+
+    // Guardar en la base de datos
+    await DatabaseHelper().insertarReserva(nuevaReserva);
+
+    // Actualizar la lista local para mostrar en la UI
+    setState(() {
+      _reservas.add(nuevaReserva.toMap());
+      _mesasOcupadas[_mesaSeleccionada!] = true;
+    });
+
+    // Navegar a la pantalla de reservas
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ReservasScreen(placeId: widget.placeId)),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Por favor, selecciona una mesa antes de continuar')),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

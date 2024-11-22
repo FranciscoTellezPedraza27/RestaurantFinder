@@ -5,6 +5,7 @@ class Reserva {
   final int adultos;
   final int ninos;
   final int adolescentes;
+  final String placeId;
 
   Reserva({
     this.id,
@@ -13,6 +14,7 @@ class Reserva {
     required this.adultos,
     required this.ninos,
     required this.adolescentes,
+    required this.placeId
   });
 
   // Convertir a Map para almacenar en SQLite
@@ -24,6 +26,7 @@ class Reserva {
       'adultos': adultos,
       'ninos': ninos,
       'adolescentes': adolescentes,
+      'placeId': placeId,
     };
   }
 
@@ -36,6 +39,7 @@ class Reserva {
       adultos: map['adultos'],
       ninos: map['ninos'],
       adolescentes: map['adolescentes'],
+      placeId: map['placeId']
     );
   }
 }
